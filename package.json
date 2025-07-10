@@ -21,7 +21,7 @@
     "appId": "com.chatassistant.app",
     "productName": "Chat Assistant",
     "directories": {
-      "output": "dist-installer"
+      "output": "build"
     },
     "files": [
       "dist/**/*",
@@ -29,12 +29,24 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Chat Assistant",
+      "runAfterFinish": true,
+      "allowElevation": true
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.png"
     },
     "linux": {
       "target": "AppImage",
