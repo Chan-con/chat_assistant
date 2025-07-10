@@ -1,0 +1,584 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', 'Meiryo', 'メイリオ', sans-serif;
+  overflow: hidden; /* ボディのスクロールを無効化 */
+  -webkit-app-region: no-drag; /* デフォルトでドラッグ無効 */
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* ルート要素のスクロールを無効化 */
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+input, textarea {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+  transition: border-color 0.25s;
+}
+
+input:focus, textarea:focus {
+  border-color: #646cff;
+  outline: none;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  gap: 0;
+  overflow: hidden; /* コンテナのスクロールを無効化 */
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1a1a1a;
+  min-height: 48px;
+  -webkit-app-region: drag;
+}
+
+.header h1 {
+  font-size: 1.1em;
+  font-weight: 500;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.3px;
+  -webkit-app-region: drag;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.window-button {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.window-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.window-button.close:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.window-button.minimize::after {
+  content: "−";
+}
+
+.window-button.maximize::after {
+  content: "□";
+}
+
+.window-button.close::after {
+  content: "×";
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden; /* メインコンテンツのスクロールを無効化 */
+  min-height: 0; /* flexbox制約を有効にする */
+}
+
+.resizable-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden; /* リサイズコンテナのスクロールを無効化 */
+  min-height: 0; /* flexbox制約を有効にする */
+}
+
+.reply-section {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0; /* flexbox制約を有効にする */
+}
+
+.chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 200px;
+}
+
+.resize-handle {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: row-resize;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background: rgba(100, 108, 255, 0.3);
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.input-area {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-area textarea {
+  flex: 1;
+  resize: none;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  flex: 1;
+  min-width: 120px;
+}
+
+.output-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.output-content {
+  flex: 1;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  border-radius: 8px;
+  padding: 15px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.chat-history {
+  flex: 1;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  border-radius: 8px;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.reply-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reply-content {
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  border-radius: 8px;
+  padding: 15px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  height: 100%;
+  min-height: 200px;
+}
+
+.reply-content.editable {
+  border: 1px solid #646cff;
+  background-color: #1a1a2a;
+}
+
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0; /* flexboxの高さ制限を有効にする */
+}
+
+.chat-messages {
+  flex: 1;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+  border-radius: 8px;
+  padding: 15px;
+  overflow-y: auto;
+  min-height: 100px;
+  max-height: none; /* 高さ制限を削除 */
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.chat-input textarea {
+  flex: 1;
+  min-height: 40px;
+  max-height: 100px;
+  resize: vertical;
+}
+
+.chat-input button {
+  padding: 8px 16px;
+  height: fit-content;
+}
+
+.reply-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reply-actions button {
+  padding: 5px 10px;
+  font-size: 0.9em;
+}
+
+.message {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.message.user {
+  background-color: #2a2a2a;
+  margin-left: 20px;
+}
+
+.message.assistant {
+  background-color: #1a3a1a;
+  margin-right: 20px;
+}
+
+.message-role {
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.message-content {
+  line-height: 1.6;
+}
+
+.loading {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.error {
+  color: #ff6b6b;
+  background-color: #2a1a1a;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.setup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.setup-modal {
+  background-color: #2a2a2a;
+  padding: 30px;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+}
+
+.setup-modal h2 {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.setup-form input {
+  width: 100%;
+}
+
+.setup-form button {
+  width: 100%;
+  background-color: #646cff;
+}
+
+.setup-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.settings-modal {
+  background-color: #2a2a2a;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.settings-header h2 {
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 1);
+}
+
+.settings-form {
+  padding: 30px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.form-group input {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 12px 20px;
+}
+
+.primary-button {
+  background-color: #646cff;
+  border: 1px solid #646cff;
+}
+
+.primary-button:hover:not(:disabled) {
+  background-color: #5856eb;
+  border-color: #5856eb;
+}
+
+.danger-button {
+  background-color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.danger-button:hover:not(:disabled) {
+  background-color: #bb2d3b;
+  border-color: #bb2d3b;
+}
+
+.success {
+  background-color: #1a3d1a;
+  color: #4ade80;
+  padding: 10px;
+  border-radius: 8px;
+  margin: 10px 0;
+  border: 1px solid #22c55e;
+}
+
+.settings-info {
+  border-top: 1px solid rgba(255, 255, 255, 0.125);
+  padding-top: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9em;
+}
+
+.settings-info p {
+  margin: 5px 0;
+}
+
+.gear-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
+}
+
+.gear-button:hover {
+  background: rgba(100, 108, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
