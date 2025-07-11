@@ -136,16 +136,32 @@ const AIChat: React.FC<AIChatProps> = ({
       const key = `thread-${msg.id}`
       const timestamp = msg.created_at * 1000
       
-      // 同じ内容のチャットメッセージがないかチェック（改善された重複検出）
+      // 同じIDのメッセージがすでに存在するかチェック
+      if (messageMap.has(key)) {
+        return
+      }
+      
+      // 同じ内容のメッセージがないかチェック（改善された重複検出）
       const isDuplicate = Array.from(messageMap.values()).some(existingMsg => {
         // 同じroleでない場合は重複ではない
         if (existingMsg.role !== msg.role) return false
         
-        // 時間差が15秒以内で、内容が完全一致の場合のみ重複とする
+        // 内容を正規化して比較（空白・改行を削除）
+        const normalizeContent = (content: string) => {
+          return content.replace(/\s+/g, ' ').trim()
+        }
+        
+        const normalizedExisting = normalizeContent(existingMsg.content)
+        const normalizedNew = normalizeContent(msg.content)
+        
+        // 時間差が60秒以内で、正規化された内容が一致する場合は重複とする
         const timeDiff = Math.abs(existingMsg.timestamp - timestamp)
+        const contentMatch = normalizedExisting === normalizedNew
+        
+        // 内容が完全に同じ場合は時間差に関係なく重複とする
         const exactMatch = existingMsg.content === msg.content
         
-        return timeDiff < 15000 && exactMatch // 15秒以内の差で内容が完全一致の場合は重複
+        return (timeDiff < 60000 && contentMatch) || exactMatch
       })
       
       if (!isDuplicate) {

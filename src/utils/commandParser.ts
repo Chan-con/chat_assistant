@@ -23,12 +23,24 @@ export function parseEditInstruction(message: string): EditInstruction | null {
     /(.+?)を(.+?)に(変更|修正|置き換え|替え|直し)て/,
     /(.+?)から(.+?)に(変更|修正|置き換え|替え|直し)て/,
     /(.+?)を(.+?)にして/,
-    /(.+?)の部分を(.+?)にして/
+    /(.+?)の部分を(.+?)にして/,
+    /(.+?)のあとに(.+?)を(入れ|追加|挿入)て/,
+    /(.+?)の後に(.+?)を(入れ|追加|挿入)て/
   ]
   
   for (const pattern of replacePatterns) {
     const match = message.match(pattern)
     if (match) {
+      // 「〜のあとに〜を入れて」パターンの場合
+      if (pattern.source.includes('あとに') || pattern.source.includes('後に')) {
+        return {
+          type: 'specific',
+          original: match[1].trim(),
+          replacement: `${match[1].trim()}\n${match[2].trim()}`,
+          action: 'replace'
+        }
+      }
+      
       return {
         type: 'specific',
         original: match[1].trim(),
@@ -77,13 +89,21 @@ export function parseEditInstruction(message: string): EditInstruction | null {
   const generalEditPatterns = [
     /(編集|修正|直し|改善|良く|ブラッシュアップ)して/,
     /(書き直し|リライト)て/,
-    /文章を(整え|調整)て/
+    /文章を(整え|調整)て/,
+    /(改行|行替え|改行区切り|見やすく|読みやすく|整理)して/,
+    /(レイアウト|体裁|形式|フォーマット)を(変更|修正|調整)して/
   ]
   
   for (const pattern of generalEditPatterns) {
     if (lowerMessage.match(pattern)) {
+      // 「してほしい」「したい」が含まれている場合は確認が必要
+      const needsConfirmation = lowerMessage.includes('してほしい') || 
+                              lowerMessage.includes('したい') ||
+                              lowerMessage.includes('してもらいたい') ||
+                              lowerMessage.includes('していただきたい')
+      
       return {
-        type: 'general',
+        type: needsConfirmation ? 'general' : 'specific',
         action: 'general'
       }
     }
@@ -95,7 +115,7 @@ export function parseEditInstruction(message: string): EditInstruction | null {
 export function parseCommand(message: string, currentReply: string): CommandResult {
   const lowerMessage = message.toLowerCase().trim()
   
-  // 返信作成コマンド
+  // 返信作成コマンド（最優先で判定）
   if (
     lowerMessage.includes('返信を作って') ||
     lowerMessage.includes('返事を作って') ||
@@ -106,7 +126,13 @@ export function parseCommand(message: string, currentReply: string): CommandResu
     lowerMessage.includes('返信をください') ||
     lowerMessage.includes('返事をください') ||
     lowerMessage.includes('この情報で返信を作って') ||
-    lowerMessage.includes('この情報で返事を作って')
+    lowerMessage.includes('この情報で返事を作って') ||
+    lowerMessage.includes('返信つくって') ||
+    lowerMessage.includes('返事つくって') ||
+    lowerMessage.includes('返信書いて') ||
+    lowerMessage.includes('返事書いて') ||
+    lowerMessage.includes('返信を書いて') ||
+    lowerMessage.includes('返事を書いて')
   ) {
     return {
       isCommand: true,
@@ -196,18 +222,13 @@ export function parseCommand(message: string, currentReply: string): CommandResu
 }
 
 export function generateSystemPrompt(command: CommandResult, currentReply: string): string {
-  const basePrompt = "あなたは日本語でチャットの返事を書くのを手伝うアシスタントです。"
-  const readabilityInstruction = "\n\n【重要な書式指定】\n- 返信は1行開けることなく、行を詰めて短くまとめてください\n- 無駄な改行を削除し、コンパクトに表示してください\n- 返信文は簡潔に要点をまとめ、長文を避けてください\n- 改行は必要最小限に留め、連続する改行は使用しないでください"
-  
-  // OpenAI Assistants APIはスレッド内で自動的に会話履歴を保持するため、手動での履歴送信は不要
-  
   switch (command.action) {
     case 'create':
       const contextInfo = currentReply ? `\n\n参考情報: ${currentReply}` : ''
-      return `${basePrompt}${readabilityInstruction}\n\nユーザーからの要求に基づいて、適切で丁寧な返信を作成してください。作成した返信のみを出力してください。\n\n要求: ${command.content}${contextInfo}`
+      return `ユーザーが他の人に送る返信文を作成してください。\n\n重要：\n- 「こちらこそ」「私も」などの直接的な応答は使わない\n- 相手のメッセージに対して自然な返信を作成\n- 指定された絵文字は必ず含める\n- 返信文のみを出力\n\n要求: ${command.content}${contextInfo}`
     
     case 'append':
-      return `${basePrompt}${readabilityInstruction}\n\n現在の返信: "${currentReply}"\n\nユーザーの要求に基づいて、上記の返信に内容を追加してください。追加後の完全な返信を出力してください。\n\n要求: ${command.content}`
+      return `現在の返信: "${currentReply}"\n\n上記の返信に内容を追加してください。追加後の完全な返信を出力してください。\n\n要求: ${command.content}`
     
     case 'edit':
       if (command.editInstruction) {
@@ -220,22 +241,22 @@ export function generateSystemPrompt(command: CommandResult, currentReply: strin
             return `現在の返信: "${currentReply}"\n\n上記の返信から"${instruction.original}"を削除してください。削除後の完全な返信のみを出力してください。`
           }
         } else if (instruction.type === 'general') {
-          return `${readabilityInstruction}\n\n現在の返信: "${currentReply}"\n\nユーザーの要求: "${command.content}"\n\n上記の要求に基づいて返信を編集してください。編集後の完全な返信のみを出力してください。`
+          return `現在の返信: "${currentReply}"\n\n要求: "${command.content}"\n\n上記の要求に基づいて返信を編集してください。編集後の完全な返信のみを出力してください。`
         }
       }
-      return `${basePrompt}${readabilityInstruction}\n\n現在の返信: "${currentReply}"\n\nユーザーの要求に基づいて、上記の返信を修正してください。修正後の完全な返信を出力してください。\n\n要求: ${command.content}`
+      return `現在の返信: "${currentReply}"\n\n要求: "${command.content}"\n\n上記の要求に基づいて返信を修正してください。修正後の完全な返信を出力してください。`
     
     case 'modify':
-      return `${basePrompt}${readabilityInstruction}\n\n現在の返信: "${currentReply}"\n\nユーザーの要求に基づいて、上記の返信を修正してください。修正後の完全な返信を出力してください。\n\n要求: ${command.content}`
+      return `現在の返信: "${currentReply}"\n\n要求: "${command.content}"\n\n上記の要求に基づいて返信を修正してください。修正後の完全な返信を出力してください。`
     
     case 'remove':
-      return `${basePrompt}\n\n現在の返信: "${currentReply}"\n\nユーザーの要求に基づいて、上記の返信から指定された部分を削除してください。削除後の完全な返信を出力してください。\n\n要求: ${command.content}`
+      return `現在の返信: "${currentReply}"\n\n要求: "${command.content}"\n\n上記の要求に基づいて返信から指定された部分を削除してください。削除後の完全な返信を出力してください。`
     
     case 'research':
-      return `${basePrompt}${readabilityInstruction}\n\n【重要】調査結果を基に、相手への返信として最適な文章を作成してください。「調査内容：」「返信文：」などのラベルは使用せず、返信内容のみを出力してください。\n\n要求: ${command.content}`
+      return `調査結果を基に、相手への返信として最適な文章を作成してください。返信内容のみを出力してください。\n\n要求: ${command.content}`
     
     case 'chat':
     default:
-      return `${basePrompt}\n\nユーザーと会話をして、最適な返信を作成するための相談に乗ってください。必要に応じて質問をしたり、提案をしたりしてください。\n\nユーザーのメッセージ: ${command.content}`
+      return `返信作成のお手伝いをします。ご質問やご相談があれば、お気軽にお聞かせください。\n\nメッセージ: ${command.content}`
   }
 }

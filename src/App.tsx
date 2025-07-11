@@ -170,37 +170,13 @@ function App() {
       clearTimeout(longLoadingTimer)
       
       if (result.success) {
-        const assistantMessage: ChatMessage = {
-          id: `assistant-${Date.now()}-${Math.random()}`, // より確実なユニークID
-          role: 'assistant',
-          content: (result.response || '').replace(/\n{2,}/g, '\n').trim(),
-          timestamp: Date.now() + 1, // わずかに後の時刻を設定
-          isCommand: command.isCommand
-        }
-        
-        // 重複チェックしてから追加
-        setChatMessages(prev => {
-          const isDuplicate = prev.some(msg => 
-            msg.role === 'assistant' && 
-            msg.content === assistantMessage.content &&
-            Math.abs(msg.timestamp - assistantMessage.timestamp) < 5000
-          )
-          
-          if (isDuplicate) {
-            console.log('Duplicate assistant message detected, skipping')
-            return prev
-          }
-          
-          return [...prev, assistantMessage]
-        })
-        
         // コマンドの場合は返信エリアを更新
         if (command.isCommand && ['create', 'append', 'modify', 'remove', 'edit', 'research'].includes(command.action)) {
           console.log('Updating reply content:', result.response) // デバッグ用
           setReplyContent((result.response || '').replace(/\n{2,}/g, '\n').trim())
         }
         
-        // スレッドメッセージの読み込みは少し遅延
+        // スレッドメッセージの読み込みのみ行う（重複を避けるため）
         setTimeout(() => {
           loadMessages()
         }, 500)
@@ -275,18 +251,7 @@ function App() {
     setReplyContent(editPreview.editedText)
     setShowEditConfirmation(false)
     
-    // AIレスポンスメッセージを追加
-    const assistantMessage: ChatMessage = {
-      id: `assistant-${Date.now()}-${Math.random()}`,
-      role: 'assistant',
-      content: editPreview.editedText,
-      timestamp: Date.now(),
-      isCommand: true
-    }
-    
-    setChatMessages(prev => [...prev, assistantMessage])
-    
-    // スレッドメッセージの読み込み
+    // スレッドメッセージの読み込みのみ行う（重複を避けるため）
     setTimeout(() => {
       loadMessages()
     }, 500)
