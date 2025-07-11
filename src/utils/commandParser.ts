@@ -104,7 +104,9 @@ export function parseCommand(message: string, currentReply: string): CommandResu
     lowerMessage.includes('返信作成') ||
     lowerMessage.includes('返事作成') ||
     lowerMessage.includes('返信をください') ||
-    lowerMessage.includes('返事をください')
+    lowerMessage.includes('返事をください') ||
+    lowerMessage.includes('この情報で返信を作って') ||
+    lowerMessage.includes('この情報で返事を作って')
   ) {
     return {
       isCommand: true,
@@ -195,7 +197,7 @@ export function parseCommand(message: string, currentReply: string): CommandResu
 
 export function generateSystemPrompt(command: CommandResult, currentReply: string): string {
   const basePrompt = "あなたは日本語でチャットの返事を書くのを手伝うアシスタントです。"
-  const readabilityInstruction = "\n\n【重要な書式指定】\n- 返信は読みやすさを重視し、適度に改行を入れてください\n- 長い文章は意味の区切りで改行し、チャット画面で見やすくしてください\n- 1つの段落が長すぎる場合は、複数の段落に分けてください\n- 箇条書きや番号付きリストも積極的に活用してください"
+  const readabilityInstruction = "\n\n【重要な書式指定】\n- 返信は1行開けることなく、行を詰めて短くまとめてください\n- 無駄な改行を削除し、コンパクトに表示してください\n- 返信文は簡潔に要点をまとめ、長文を避けてください\n- 改行は必要最小限に留め、連続する改行は使用しないでください"
   
   // OpenAI Assistants APIはスレッド内で自動的に会話履歴を保持するため、手動での履歴送信は不要
   
@@ -230,7 +232,7 @@ export function generateSystemPrompt(command: CommandResult, currentReply: strin
       return `${basePrompt}\n\n現在の返信: "${currentReply}"\n\nユーザーの要求に基づいて、上記の返信から指定された部分を削除してください。削除後の完全な返信を出力してください。\n\n要求: ${command.content}`
     
     case 'research':
-      return `${basePrompt}${readabilityInstruction}\n\nユーザーの要求について調査し、情報を提供してください。その後、その情報を基に返信を作成することを提案してください。\n\n要求: ${command.content}`
+      return `${basePrompt}${readabilityInstruction}\n\n【重要】調査結果を基に、相手への返信として最適な文章を作成してください。「調査内容：」「返信文：」などのラベルは使用せず、返信内容のみを出力してください。\n\n要求: ${command.content}`
     
     case 'chat':
     default:

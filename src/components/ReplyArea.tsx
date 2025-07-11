@@ -5,30 +5,21 @@ interface ReplyAreaProps {
   onChange: (content: string) => void
   onCopy: () => void
   onClear: () => void
-  isEditable: boolean
-  onToggleEdit: () => void
 }
 
 const ReplyArea: React.FC<ReplyAreaProps> = ({ 
   content, 
   onChange, 
   onCopy, 
-  onClear, 
-  isEditable, 
-  onToggleEdit 
+  onClear
 }) => {
   const [editContent, setEditContent] = useState(content)
   const [selectedText, setSelectedText] = useState('')
   const contentRef = useRef<HTMLDivElement>(null)
 
-  const handleSave = () => {
-    onChange(editContent)
-    onToggleEdit()
-  }
-
-  const handleCancel = () => {
-    setEditContent(content)
-    onToggleEdit()
+  const handleChange = (newContent: string) => {
+    setEditContent(newContent)
+    onChange(newContent)
   }
 
   React.useEffect(() => {
@@ -64,26 +55,14 @@ const ReplyArea: React.FC<ReplyAreaProps> = ({
   return (
     <div className="reply-area">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3>最終返信</h3>
+        <h3>返信文</h3>
         <div className="reply-actions">
-          {isEditable ? (
-            <>
-              <button onClick={handleSave}>保存</button>
-              <button onClick={handleCancel}>キャンセル</button>
-            </>
-          ) : (
-            <>
-              <button onClick={onToggleEdit} disabled={!content}>
-                編集
-              </button>
-              <button onClick={onCopy} disabled={!content}>
-                コピー
-              </button>
-              <button onClick={onClear} disabled={!content}>
-                クリア
-              </button>
-            </>
-          )}
+          <button onClick={onCopy} disabled={!content}>
+            コピー
+          </button>
+          <button onClick={onClear} disabled={!content}>
+            クリア
+          </button>
         </div>
       </div>
       
@@ -115,10 +94,10 @@ const ReplyArea: React.FC<ReplyAreaProps> = ({
         </div>
       )}
       
-      {isEditable ? (
+      <div style={{ position: 'relative', height: 'calc(100% - 80px)' }}>
         <textarea
           value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           className="reply-content editable"
           style={{ 
             resize: 'none',
@@ -126,20 +105,14 @@ const ReplyArea: React.FC<ReplyAreaProps> = ({
             fontSize: '1em',
             lineHeight: '1.6',
             height: '100%',
-            minHeight: '200px'
+            width: '100%',
+            minHeight: '100px'
           }}
-        />
-      ) : (
-        <div 
-          ref={contentRef}
-          className="reply-content"
+          placeholder="返信文がここに表示されます。AIとの相談を通じて作成してください。"
           onMouseUp={handleTextSelection}
           onKeyUp={handleTextSelection}
-          style={{ userSelect: 'text', cursor: 'text' }}
-        >
-          {content || '最終的な返信がここに表示されます。AIとの相談を通じて作成してください。'}
-        </div>
-      )}
+        />
+      </div>
     </div>
   )
 }

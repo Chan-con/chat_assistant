@@ -27,7 +27,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
   const [replyContent, setReplyContent] = useState('')
-  const [isReplyEditable, setIsReplyEditable] = useState(false)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [threadMessages, setThreadMessages] = useState<Message[]>([])
   const [error, setError] = useState('')
@@ -174,7 +173,7 @@ function App() {
         const assistantMessage: ChatMessage = {
           id: `assistant-${Date.now()}-${Math.random()}`, // より確実なユニークID
           role: 'assistant',
-          content: result.response || '',
+          content: (result.response || '').replace(/\n{2,}/g, '\n').trim(),
           timestamp: Date.now() + 1, // わずかに後の時刻を設定
           isCommand: command.isCommand
         }
@@ -196,9 +195,9 @@ function App() {
         })
         
         // コマンドの場合は返信エリアを更新
-        if (command.isCommand && ['create', 'append', 'modify', 'remove', 'edit'].includes(command.action)) {
+        if (command.isCommand && ['create', 'append', 'modify', 'remove', 'edit', 'research'].includes(command.action)) {
           console.log('Updating reply content:', result.response) // デバッグ用
-          setReplyContent(result.response || '')
+          setReplyContent((result.response || '').replace(/\n{2,}/g, '\n').trim())
         }
         
         // スレッドメッセージの読み込みは少し遅延
@@ -228,9 +227,6 @@ function App() {
     setReplyContent('')
   }
 
-  const handleToggleReplyEdit = () => {
-    setIsReplyEditable(!isReplyEditable)
-  }
 
   const handleEditPreview = async (message: string, command: any) => {
     setLoadingMessage('編集プレビューを生成しています...')
@@ -378,8 +374,6 @@ function App() {
               onChange={setReplyContent}
               onCopy={handleCopyReply}
               onClear={handleClearReply}
-              isEditable={isReplyEditable}
-              onToggleEdit={handleToggleReplyEdit}
             />
             
             <AIChat
